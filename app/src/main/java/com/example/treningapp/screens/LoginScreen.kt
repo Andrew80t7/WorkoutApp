@@ -1,10 +1,5 @@
 package com.example.treningapp.screens
 
-import android.app.Activity
-import android.content.Intent
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -23,59 +18,31 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.example.treningapp.R
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.common.api.ApiException
 
 @Composable
-fun RegisterScreen(
+fun LoginScreen(
     onBack: () -> Unit,
-    onLoginClick: () -> Unit,
-    onRegisterClick: (() -> Unit)? = null,
-    onGoogleSignIn: (() -> Unit)? = null,
+    onRegisterClick: () -> Unit,
+    onLoginSuccess: () -> Unit,
     authViewModel: com.example.treningapp.auth.AuthViewModel? = null,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val activity = context as Activity
 
     // Состояния для полей ввода
-    var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var showPassword by remember { mutableStateOf(false) }
 
-    val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-        .requestIdToken(context.getString(R.string.default_web_client_id))
-        .requestEmail()
-        .build()
-    val googleSignInClient = GoogleSignIn.getClient(activity, gso)
-
-    val launcher =
-        rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            val data: Intent? = result.data
-            try {
-                val task = GoogleSignIn.getSignedInAccountFromIntent(data)
-                val account = task.getResult(ApiException::class.java)
-                val idToken = account?.idToken
-
-                if (authViewModel != null) {
-                    authViewModel.firebaseAuthWithGoogle(idToken)
-                } else {
-                    onGoogleSignIn?.invoke()
-                }
-            } catch (e: ApiException) {
-                if (authViewModel != null) {
-                    authViewModel.firebaseAuthWithGoogle(null)
-                } else {
-                    onGoogleSignIn?.invoke()
-                }
-            }
-        }
-
     val authState by authViewModel?.authState?.collectAsState() ?: remember {
         mutableStateOf<com.example.treningapp.auth.AuthState>(com.example.treningapp.auth.AuthState.Idle)
+    }
+
+    // Обработка успешного логина
+    LaunchedEffect(authState) {
+        if (authState is com.example.treningapp.auth.AuthState.Success) {
+            onLoginSuccess()
+        }
     }
 
     Scaffold(modifier = modifier.fillMaxSize()) { innerPadding ->
@@ -92,7 +59,7 @@ fun RegisterScreen(
                 Spacer(Modifier.height(40.dp))
 
                 Text(
-                    text = "Hey body,",
+                    text = "Welcome back,",
                     style = MaterialTheme.typography.headlineMedium,
                     color = Color(0xFFFFFFFF)
                 )
@@ -100,7 +67,7 @@ fun RegisterScreen(
                 Spacer(Modifier.height(16.dp))
 
                 Text(
-                    text = "Create a new account",
+                    text = "Sign in to your account",
                     style = MaterialTheme.typography.headlineSmall,
                     color = Color(0xFFFFFFFF)
                 )
@@ -108,27 +75,6 @@ fun RegisterScreen(
                 Spacer(Modifier.height(32.dp))
 
                 // Поля ввода
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Full Name", color = Color(0x99FFFFFF)) },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent,
-                        disabledContainerColor = Color.Transparent,
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        cursorColor = Color(0xFF00FFB7),
-                        focusedLabelColor = Color(0xFF00FFB7),
-                        unfocusedLabelColor = Color(0x99FFFFFF),
-                        focusedIndicatorColor = Color(0xFF00FFB7),
-                        unfocusedIndicatorColor = Color(0x99FFFFFF)
-                    )
-                )
-
-                Spacer(Modifier.height(16.dp))
-
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
@@ -184,33 +130,10 @@ fun RegisterScreen(
 
             // Центральная часть с кнопками
             Column {
-                OutlinedButton(
-                    onClick = {
-                        val signInIntent = googleSignInClient.signInIntent
-                        launcher.launch(signInIntent)
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = Color.White,
-                        containerColor = Color.Transparent
-                    ),
-                    border = BorderStroke(1.dp, Color(0xFF00FFB7))
-                ) {
-                    Text("Continue with Google")
-                }
-
-                Spacer(Modifier.height(24.dp))
-
                 Button(
                     onClick = {
                         if (authViewModel != null) {
-                            // Вызываем метод регистрации по email из ViewModel
-                            authViewModel.registerWithEmail(name, email, password)
-                        } else {
-                            // Если ViewModel не передан, используем колбэк
-                            onRegisterClick?.invoke()
+                            authViewModel.signInWithEmail(email, password)
                         }
                     },
                     modifier = Modifier
@@ -220,23 +143,25 @@ fun RegisterScreen(
                         containerColor = Color(0xFF00FFB7),
                         contentColor = Color(0xFF000000)
                     ),
-                    enabled = name.isNotBlank() && email.isNotBlank() && password.isNotBlank()
+                    enabled = email.isNotBlank() && password.isNotBlank()
                 ) {
-                    Text("Register", style = MaterialTheme.typography.bodyLarge)
+                    Text("Sign In", style = MaterialTheme.typography.bodyLarge)
                 }
 
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(24.dp))
 
                 Text(
-                    text = "By continuing you accept our Privacy Policy and",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color(0x99FFFFFF),
+                    text = "Forgot your password?",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color(0xFF00FFB7),
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { /* TODO: Add password reset */ }
                 )
             }
 
-            // Нижняя часть с ссылкой на логин
+            // Нижняя часть с ссылкой на регистрацию
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -244,15 +169,15 @@ fun RegisterScreen(
                 horizontalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "Already have an account? ",
+                    text = "Don't have an account? ",
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color(0x99FFFFFF)
                 )
                 Text(
-                    text = "Login",
+                    text = "Register",
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color(0xFF00FFB7),
-                    modifier = Modifier.clickable(onClick = onLoginClick)
+                    modifier = Modifier.clickable(onClick = onRegisterClick)
                 )
             }
         }
@@ -262,12 +187,6 @@ fun RegisterScreen(
     if (authState is com.example.treningapp.auth.AuthState.Loading) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator(color = Color(0xFF00FFB7))
-        }
-    }
-
-    // Обработка успешной регистрации
-    LaunchedEffect(authState) {
-        if (authState is com.example.treningapp.auth.AuthState.Success) {
         }
     }
 }
