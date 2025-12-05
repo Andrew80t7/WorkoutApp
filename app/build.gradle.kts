@@ -3,8 +3,9 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("com.google.gms.google-services")
+    alias(libs.plugins.ksp)
 }
-
+Ы
 android {
     namespace = "com.example.treningapp"
     compileSdk = 36
@@ -61,6 +62,7 @@ dependencies {
     implementation(libs.androidx.compose.animation.core.lint)
 //    implementation(libs.firebase.auth.ktx)
 //    implementation(libs.firebase.auth.common)
+    implementation(libs.androidx.room.compiler)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -69,5 +71,19 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 //    implementation("androidx.navigation:navigation-compose:<latest-version>")
+
+    //Room
+    implementation(libs.bundles.room)
+    ksp(libs.androidx.room.compiler)
+    implementation(libs.androidx.datastore.preferences)
+    implementation(libs.bundles.viewmodel)
+    implementation(libs.kotlinx.coroutines.android)
+
+    implementation(libs.androidx.datastore.preferences)
+    implementation(libs.androidx.datastore.core)
+
+    implementation(libs.koin.android)
+    implementation(libs.koin.compose)
+
 
 }
