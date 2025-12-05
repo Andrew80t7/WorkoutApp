@@ -1,0 +1,192 @@
+package com.example.treningapp.screens
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+
+@Composable
+fun LoginScreen(
+    onBack: () -> Unit,
+    onRegisterClick: () -> Unit,
+    onLoginSuccess: () -> Unit,
+    authViewModel: com.example.treningapp.auth.AuthViewModel? = null,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+
+    // Состояния для полей ввода
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var showPassword by remember { mutableStateOf(false) }
+
+    val authState by authViewModel?.authState?.collectAsState() ?: remember {
+        mutableStateOf<com.example.treningapp.auth.AuthState>(com.example.treningapp.auth.AuthState.Idle)
+    }
+
+    // Обработка успешного логина
+    LaunchedEffect(authState) {
+        if (authState is com.example.treningapp.auth.AuthState.Success) {
+            onLoginSuccess()
+        }
+    }
+
+    Scaffold(modifier = modifier.fillMaxSize()) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .background(Color(0xFF171717))
+                .padding(horizontal = 24.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            // Верхняя часть
+            Column {
+                Spacer(Modifier.height(40.dp))
+
+                Text(
+                    text = "Welcome back,",
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = Color(0xFFFFFFFF)
+                )
+
+                Spacer(Modifier.height(16.dp))
+
+                Text(
+                    text = "Sign in to your account",
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = Color(0xFFFFFFFF)
+                )
+
+                Spacer(Modifier.height(32.dp))
+
+                // Поля ввода
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    label = { Text("Email", color = Color(0x99FFFFFF)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        cursorColor = Color(0xFF00FFB7),
+                        focusedLabelColor = Color(0xFF00FFB7),
+                        unfocusedLabelColor = Color(0x99FFFFFF),
+                        focusedIndicatorColor = Color(0xFF00FFB7),
+                        unfocusedIndicatorColor = Color(0x99FFFFFF)
+                    )
+                )
+
+                Spacer(Modifier.height(16.dp))
+
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = { Text("Password", color = Color(0x99FFFFFF)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    trailingIcon = {
+                        IconButton(onClick = { showPassword = !showPassword }) {
+                            Icon(
+                                imageVector = if (showPassword) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                contentDescription = if (showPassword) "Hide password" else "Show password",
+                                tint = Color(0x99FFFFFF)
+                            )
+                        }
+                    },
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        cursorColor = Color(0xFF00FFB7),
+                        focusedLabelColor = Color(0xFF00FFB7),
+                        unfocusedLabelColor = Color(0x99FFFFFF),
+                        focusedIndicatorColor = Color(0xFF00FFB7),
+                        unfocusedIndicatorColor = Color(0x99FFFFFF)
+                    )
+                )
+            }
+
+            // Центральная часть с кнопками
+            Column {
+                Button(
+                    onClick = {
+                        if (authViewModel != null) {
+                            authViewModel.signInWithEmail(email, password)
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF00FFB7),
+                        contentColor = Color(0xFF000000)
+                    ),
+                    enabled = email.isNotBlank() && password.isNotBlank()
+                ) {
+                    Text("Sign In", style = MaterialTheme.typography.bodyLarge)
+                }
+
+                Spacer(Modifier.height(24.dp))
+
+                Text(
+                    text = "Forgot your password?",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color(0xFF00FFB7),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { /* TODO: Add password reset */ }
+                )
+            }
+
+            // Нижняя часть с ссылкой на регистрацию
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 40.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "Don't have an account? ",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color(0x99FFFFFF)
+                )
+                Text(
+                    text = "Register",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color(0xFF00FFB7),
+                    modifier = Modifier.clickable(onClick = onRegisterClick)
+                )
+            }
+        }
+    }
+
+    // Показываем индикатор загрузки
+    if (authState is com.example.treningapp.auth.AuthState.Loading) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(color = Color(0xFF00FFB7))
+        }
+    }
+}
