@@ -29,7 +29,6 @@ fun LoginScreen(
 ) {
     val context = LocalContext.current
 
-    // Состояния для полей ввода
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var showPassword by remember { mutableStateOf(false) }

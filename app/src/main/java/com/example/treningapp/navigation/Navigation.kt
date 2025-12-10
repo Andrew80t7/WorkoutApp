@@ -1,5 +1,6 @@
 package com.example.treningapp.navigation
 
+import org.koin.androidx.compose.getViewModel
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -12,6 +13,9 @@ import com.example.treningapp.screens.FirstScreen
 import com.example.treningapp.screens.RegisterScreen
 import com.example.treningapp.screens.LoginScreen
 import com.example.treningapp.screens.ProfileSetupScreen
+import com.example.treningapp.ui.main.ProfileViewModel
+//import com.example.treningapp.ProfileViewModel               // <- убедись, что путь верный
+import com.google.firebase.auth.FirebaseAuth
 
 sealed class Screen {
     object First : Screen()
@@ -23,16 +27,17 @@ sealed class Screen {
 
 @Composable
 fun AppNavigation(modifier: Modifier = Modifier) {
+
     val authViewModel: AuthViewModel = viewModel()
+    val profileViewModel: ProfileViewModel = getViewModel()
     val authState by authViewModel.authState.collectAsState()
     val currentScreen = remember { mutableStateOf<Screen>(Screen.First) }
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Обработка успешной аутентификации
+    // Обработка успешной аутентификации -> переходим на ProfileSetup
     LaunchedEffect(authState) {
         when (authState) {
             is AuthState.Success -> {
-                // Переходим на экран профиля при успешной регистрации/логине
                 currentScreen.value = Screen.ProfileSetup
             }
             is AuthState.Error -> {
@@ -46,8 +51,7 @@ fun AppNavigation(modifier: Modifier = Modifier) {
     // Обработка кнопки "Назад"
     BackHandler(enabled = currentScreen.value != Screen.First) {
         when (currentScreen.value) {
-            Screen.Register, Screen.Login -> currentScreen.value = Screen.First
-            Screen.ProfileSetup -> currentScreen.value = Screen.First
+            Screen.Register, Screen.Login, Screen.ProfileSetup -> currentScreen.value = Screen.First
             else -> {}
         }
     }
@@ -74,14 +78,25 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                 modifier = modifier.padding(innerPadding)
             )
 
-            Screen.ProfileSetup -> ProfileSetupScreen(
-                onBack = { currentScreen.value = Screen.First },
-                onNext = {
-                    // После завершения профиля переходим на главный экран
-                    currentScreen.value = Screen.Home
-                },
-                modifier = modifier.padding(innerPadding)
-            )
+            Screen.ProfileSetup -> {
+                // Получаем uid текущего пользователя из FirebaseAuth
+                val uid = FirebaseAuth.getInstance().currentUser?.uid
+                if (uid != null) {
+                    ProfileSetupScreen(
+                        userId = uid,
+                        profileViewModel = profileViewModel,
+                        onBack = { currentScreen.value = Screen.First },
+                        onNext = { currentScreen.value = Screen.Home },
+                        modifier = modifier.padding(innerPadding)
+                    )
+                } else {
+                    // если uid неожиданно null — вернёмся на старт и покажем ошибку
+                    LaunchedEffect(Unit) {
+                        snackbarHostState.showSnackbar("User id not available. Please sign in again.")
+                        currentScreen.value = Screen.First
+                    }
+                }
+            }
 
             Screen.Home -> FirstScreen(
                 onGoClick = { /* Ничего не делаем, мы уже на главном */ },
