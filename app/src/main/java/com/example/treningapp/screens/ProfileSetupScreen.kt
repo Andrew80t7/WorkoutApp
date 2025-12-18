@@ -41,12 +41,10 @@ fun ProfileSetupScreen(
     var height by rememberSaveable { mutableStateOf("") }
     var age by rememberSaveable { mutableStateOf("") }
 
-    // Load existing local profile if any
     LaunchedEffect(userId) {
         profileViewModel.loadUser(userId)
     }
 
-    // populate UI when loaded
     LaunchedEffect(uiState.user) {
         uiState.user?.let { u ->
             name = u.displayName ?: name
@@ -57,7 +55,6 @@ fun ProfileSetupScreen(
         }
     }
 
-    // show snackbar on error
     LaunchedEffect(uiState.error) {
         uiState.error?.let { snackbarHostState.showSnackbar(it) }
     }
@@ -209,8 +206,6 @@ fun ProfileSetupScreen(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done)
                 )
             }
-
-            // Bottom: Save/Next
             Column {
                 Button(
                     onClick = {
@@ -246,7 +241,6 @@ fun ProfileSetupScreen(
         }
     }
 
-    // show loading overlay
     if (uiState.loading) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator(color = Color(0xFF00FFB7))

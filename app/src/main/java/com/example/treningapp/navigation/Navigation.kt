@@ -90,7 +90,7 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                         modifier = modifier.padding(innerPadding)
                     )
                 } else {
-                    // если uid неожиданно null — вернёмся на старт и покажем ошибку
+                    // если uid null — вернёмся на старт
                     LaunchedEffect(Unit) {
                         snackbarHostState.showSnackbar("User id not available. Please sign in again.")
                         currentScreen.value = Screen.First
@@ -99,7 +99,7 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             }
 
             Screen.Home -> FirstScreen(
-                onGoClick = { /* Ничего не делаем, мы уже на главном */ },
+                onGoClick = { },
                 modifier = modifier.padding(innerPadding)
             )
         }
