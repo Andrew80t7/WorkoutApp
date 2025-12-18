@@ -1,4 +1,4 @@
-# TrainingApp
+# WorkoutApp
 
 # Android-приложение для тренировок и учёта прогресса с регистрацией (Firebase Auth — Google / Email), локальным хранением профиля и тренировок в Room и DI через Koin.
 
