@@ -31,5 +31,12 @@ interface WorkoutDao {
     fun getAllWorkouts(): Flow<List<WorkoutEntity>>
 
 
+    @Query("SELECT * FROM workouts WHERE startTime BETWEEN :startOfDay AND :endOfDay")
+    fun getWorkoutsByDate(startOfDay: Long, endOfDay: Long): Flow<List<WorkoutEntity>>
+
+    @Query("SELECT startTime FROM workouts")
+    fun getAllWorkoutDates(): Flow<List<Long>>
+
+
 
 }

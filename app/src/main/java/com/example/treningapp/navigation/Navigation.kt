@@ -9,6 +9,8 @@ import androidx.activity.compose.BackHandler
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.treningapp.auth.AuthState
 import com.example.treningapp.auth.AuthViewModel
+import com.example.treningapp.screens.CalendarScreen
+import com.example.treningapp.screens.DayScreen
 import com.example.treningapp.screens.FirstScreen
 import com.example.treningapp.screens.RegisterScreen
 import com.example.treningapp.screens.LoginScreen
@@ -16,6 +18,7 @@ import com.example.treningapp.screens.ProfileSetupScreen
 import com.example.treningapp.ui.main.ProfileViewModel
 //import com.example.treningapp.ProfileViewModel               // <- убедись, что путь верный
 import com.google.firebase.auth.FirebaseAuth
+import java.time.LocalDate
 
 sealed class Screen {
     object First : Screen()
@@ -23,6 +26,10 @@ sealed class Screen {
     object Login : Screen()
     object ProfileSetup : Screen()
     object Home : Screen()
+
+    data class DayDetail(val date: LocalDate) : Screen()
+
+
 }
 
 @Composable
@@ -50,14 +57,16 @@ fun AppNavigation(modifier: Modifier = Modifier) {
 
     // Обработка кнопки "Назад"
     BackHandler(enabled = currentScreen.value != Screen.First) {
-        when (currentScreen.value) {
-            Screen.Register, Screen.Login, Screen.ProfileSetup -> currentScreen.value = Screen.First
-            else -> {}
+        currentScreen.value = when (currentScreen.value) {
+            Screen.Register, Screen.Login, Screen.ProfileSetup -> Screen.First
+            is Screen.DayDetail -> Screen.Home
+            Screen.Home -> Screen.First
+            else -> Screen.First
         }
     }
 
     Scaffold(snackbarHost = { SnackbarHost(hostState = snackbarHostState) }) { innerPadding ->
-        when (currentScreen.value) {
+        when (val screen = currentScreen.value) {
             Screen.First -> FirstScreen(
                 onGoClick = { currentScreen.value = Screen.Register },
                 modifier = modifier.padding(innerPadding)
@@ -98,8 +107,25 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                 }
             }
 
-            Screen.Home -> FirstScreen(
-                onGoClick = { /* Ничего не делаем, мы уже на главном */ },
+
+            is Screen.DayDetail -> {
+                val date = screen.date
+
+                DayScreen(
+                    date = date,
+                    onBack = { currentScreen.value = Screen.Home },
+                    onAddWorkout = {
+                        TODO("Screen.CreateWorkout(date)")
+                    },
+                    modifier = modifier.padding(innerPadding)
+                )
+            }
+
+
+            Screen.Home ->  CalendarScreen(
+                onDateClick = { selectedDate ->
+                    currentScreen.value = Screen.DayDetail(selectedDate)
+                },
                 modifier = modifier.padding(innerPadding)
             )
         }

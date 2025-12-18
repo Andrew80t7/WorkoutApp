@@ -1,5 +1,6 @@
 package com.example.treningapp.data.repository
 
+import androidx.compose.ui.text.rememberTextMeasurer
 import com.example.treningapp.data.local.dao.WorkoutDao
 import com.example.treningapp.data.local.entities.WorkoutEntity
 import com.example.treningapp.domain.WorkoutRepository
@@ -26,6 +27,17 @@ class WorkoutRepositoryImpl(
 
     override fun getAllWorkouts(): Flow<List<WorkoutEntity>> {
        return workoutDao.getAllWorkouts()
+    }
+
+    override fun getWorkoutsByDate(
+        startDate: Long,
+        endDate: Long
+    ): Flow<List<WorkoutEntity>> {
+         return workoutDao.getWorkoutsByDate(startDate, endDate)
+    }
+
+    override fun getAllWorkoutDates(): Flow<List<Long>> {
+        return workoutDao.getAllWorkoutDates()
     }
 
 

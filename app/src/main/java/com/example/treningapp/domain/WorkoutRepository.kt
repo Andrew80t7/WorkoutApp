@@ -17,4 +17,9 @@ interface WorkoutRepository {
     fun getAllWorkouts(): Flow<List<WorkoutEntity>>
 
 
+    fun getWorkoutsByDate(startDate: Long, endDate: Long): Flow<List<WorkoutEntity>>
+
+
+    fun getAllWorkoutDates(): Flow<List<Long>>
+
 }
